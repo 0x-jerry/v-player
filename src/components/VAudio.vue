@@ -1,0 +1,3 @@
+<template>
+  <audio></audio>
+</template>
