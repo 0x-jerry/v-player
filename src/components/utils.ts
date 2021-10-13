@@ -39,3 +39,24 @@ export function useDrag(opt: Partial<UseDragOption> = {}) {
     opt.start?.(target, e)
   }
 }
+
+/**
+ * https://css-tricks.com/restart-css-animation/
+ *
+ * @param el
+ * @param className
+ */
+export function resetAnimation(el: HTMLElement, className: string) {
+  // -> removing the class
+  el.classList.remove(className)
+
+  // -> triggering reflow /* The actual magic */
+  // without this it wouldn't work. Try uncommenting the line and the transition won't be retriggered.
+  // Oops! This won't work in strict mode. Thanks Felis Phasma!
+  // element.offsetWidth = element.offsetWidth;
+  // Do this instead:
+  void el.offsetWidth
+
+  // -> and re-adding the class
+  el.classList.add(className)
+}

@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { AudioOption } from './types'
 import VProgress from './VProgress.vue'
 import VControls from './VControls.vue'
+import VCover from './VCover.vue'
 
 const props = defineProps<{
   audios: AudioOption[]
@@ -24,10 +25,6 @@ const status = reactive({
 const currentAudio = computed(() => props.audios[status.idx])
 
 const percent = computed(() => (status.duration > 0 ? status.current / status.duration : 0))
-
-const coverAnimationStatus = computed(() => {
-  return status.paused ? 'paused' : 'running'
-})
 
 const actions = {
   switch(index: number) {
@@ -158,9 +155,12 @@ defineExpose(actions)
       @ended="onEnded"
     ></audio>
 
-    <div class="v-audio-cover">
-      <img :src="currentAudio.cover" />
-    </div>
+    <v-cover
+      class="v-audio-cover"
+      :src="currentAudio.cover"
+      :paused="status.paused"
+      :reset="status.idx"
+    />
 
     <div class="v-audio-box">
       <div class="v-audio-info" flex="~" h="full" align="items-center">
@@ -220,30 +220,9 @@ defineExpose(actions)
     left: 0;
     width: var(--size);
     height: var(--size);
-    overflow: hidden;
-    border-radius: 100%;
     top: 50%;
     transform: translateY(-50%);
     box-shadow: 0 0 20px rgb(233, 233, 233);
-
-    img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      animation: rotate 10s linear infinite;
-      animation-play-state: v-bind('coverAnimationStatus');
-    }
-
-    @keyframes rotate {
-      0% {
-        transform: rotate(0deg);
-      }
-
-      100% {
-        transform: rotate(359deg);
-      }
-    }
   }
 
   &-box {

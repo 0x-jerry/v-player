@@ -13,7 +13,7 @@ defineEmits(['play', 'previous', 'next'])
 
 <template>
   <div class="v-controls">
-    <span class="v-controls-btn v-controls-previous" @click="$emit('next')">
+    <span class="v-controls-btn v-controls-previous" @click="$emit('previous')">
       <icon-skip-previous />
     </span>
     <span class="v-controls-btn v-controls-play" @click="$emit('play')">
