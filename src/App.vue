@@ -6,8 +6,18 @@ import VVideo from './components/VVideo.vue'
 
 const audios: AudioOption[] = [
   {
-    name: 'mp3',
-    url: '/audio.mp3',
+    name: 'mp3-1',
+    url: '/audio-1.mp3',
+    cover: '/cover.png',
+  },
+  {
+    name: 'mp3-2',
+    url: '/audio-2.mp3',
+    cover: '/cover.png',
+  },
+  {
+    name: 'mp3-3',
+    url: '/audio-3.mp3',
     cover: '/cover.png',
   },
 ]

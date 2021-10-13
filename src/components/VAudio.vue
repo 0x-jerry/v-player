@@ -102,6 +102,10 @@ function initAudio() {
   if (!audio.value) return
   status.duration = audio.value.duration
   status.current = 0
+
+  if (!status.paused) {
+    actions.play()
+  }
 }
 
 function updateCurrent() {
@@ -122,9 +126,13 @@ defineExpose(actions)
 
 <template>
   <div class="v-audio" :class="{ playing: !status.paused }">
-    <audio ref="audio" style="display: none" @loadeddata="initAudio" @timeupdate="updateCurrent">
-      <source :src="currentAudio.url" />
-    </audio>
+    <audio
+      ref="audio"
+      :src="currentAudio.url"
+      style="display: none"
+      @loadeddata="initAudio"
+      @timeupdate="updateCurrent"
+    ></audio>
     <div class="v-audio-cover">
       <img :src="currentAudio.cover" />
     </div>
@@ -146,7 +154,7 @@ defineExpose(actions)
           <icon-play v-if="status.paused" />
           <icon-pause v-else />
         </span>
-        <span class="v-audio-btn v-audio-next">
+        <span class="v-audio-btn v-audio-next" @click="actions.next">
           <icon-skip-next />
         </span>
       </div>
@@ -224,7 +232,7 @@ defineExpose(actions)
 
     &__loaded {
       position: absolute;
-      transition: width linear 0.4s;
+      // transition: width linear 0.2s;
       z-index: 1;
       height: 100%;
       width: var(--loaded);
@@ -233,7 +241,7 @@ defineExpose(actions)
 
     &__current {
       position: absolute;
-      transition: width linear 0.4s;
+      // transition: width linear 0.2s;
       z-index: 2;
       width: var(--current);
       height: 100%;
