@@ -25,21 +25,27 @@ const currentAudio = computed(() => props.audios[status.idx])
 
 const percent = computed(() => (status.duration > 0 ? status.current / status.duration : 0))
 
+const coverAnimationStatus = computed(() => {
+  return status.paused ? 'paused' : 'running'
+})
+
 const actions = {
   switch(index: number) {
-    if (index === status.idx) return
+    if (index === status.idx) return false
 
-    if (index < 0 || index >= props.audios.length) return
+    if (index < 0 || index >= props.audios.length) return false
 
     status.idx = index
 
     emit('update:currentPlayIndex', index)
+
+    return true
   },
   next() {
-    actions.switch(status.idx + 1)
+    return actions.switch(status.idx + 1)
   },
   previous() {
-    actions.switch(status.idx - 1)
+    return actions.switch(status.idx - 1)
   },
 
   seek(time: number) {
@@ -125,6 +131,10 @@ function updateProgress() {
   }
 }
 
+function onEnded() {
+  status.paused = !actions.next()
+}
+
 watch(
   () => props.currentPlayIndex,
   () => {
@@ -145,7 +155,7 @@ defineExpose(actions)
       @loadeddata="initAudio"
       @timeupdate="updateCurrent"
       @progress="updateProgress"
-      @ended="status.paused = true"
+      @ended="onEnded"
     ></audio>
 
     <div class="v-audio-cover">
@@ -153,25 +163,27 @@ defineExpose(actions)
     </div>
 
     <div class="v-audio-box">
-      <div class="v-audio-info">
+      <div class="v-audio-info" flex="~" h="full" align="items-center">
         <p class="v-audio-title">{{ currentAudio.name }}</p>
       </div>
 
-      <v-progress
-        class="v-audio-progress"
-        theme="#d679a2"
-        :current="percent"
-        :ranges="status.loadedRanges"
-        @update:current="(p) => actions.seek(p * status.duration)"
-      />
+      <div flex="~" align="items-center">
+        <v-progress
+          class="v-audio-progress"
+          theme="#d679a2"
+          :current="percent"
+          :ranges="status.loadedRanges"
+          @update:current="(p) => actions.seek(p * status.duration)"
+        />
 
-      <v-controls
-        class="v-audio-controls"
-        :paused="status.paused"
-        @play="actions.toggle"
-        @previous="actions.previous"
-        @next="actions.next"
-      />
+        <v-controls
+          class="v-audio-controls"
+          :paused="status.paused"
+          @play="actions.toggle"
+          @previous="actions.previous"
+          @next="actions.next"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -198,6 +210,7 @@ defineExpose(actions)
 
   * {
     box-sizing: border-box;
+    -webkit-user-drag: none;
     padding: 0;
     margin: 0;
   }
@@ -218,7 +231,18 @@ defineExpose(actions)
       width: 100%;
       height: 100%;
       object-fit: cover;
-      -webkit-user-drag: none;
+      animation: rotate 10s linear infinite;
+      animation-play-state: v-bind('coverAnimationStatus');
+    }
+
+    @keyframes rotate {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(359deg);
+      }
     }
   }
 
@@ -240,7 +264,7 @@ defineExpose(actions)
   }
 
   &-progress {
-    margin: 5px 0;
+    margin-right: 15px;
   }
 
   &-controls {
