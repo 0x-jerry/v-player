@@ -208,7 +208,8 @@ defineExpose(actions)
     margin-left: calc(var(--size) / 2);
     padding-left: calc(var(--size) / 2 + 10px);
     padding-right: 10px;
-    box-shadow: 0 0 1px #888;
+    box-shadow: 0 0 10px #f1f1f1;
+    border-radius: 5px;
 
     display: flex;
     flex-direction: column;
