@@ -1,35 +1,53 @@
 <script lang="ts" setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { AudioOption } from './types'
+import IconPlay from '~icons/mdi/play-circle-outline'
+import IconPause from '~icons/mdi/pause-circle-outline'
+import IconSkipNext from '~icons/mdi/skip-next-outline'
+import IconSkipPrevious from '~icons/mdi/skip-previous-outline'
 
 const props = defineProps<{
   audios: AudioOption[]
-  currentPlayIndex: number
+  currentPlayIndex?: number
 }>()
 
 const emit = defineEmits(['update:currentPlayIndex'])
 
 const audio = ref<HTMLAudioElement>()
 
-const currentAudio = computed(() => props.audios[props.currentPlayIndex])
-
 const status = reactive({
-  paused: false,
+  idx: props.currentPlayIndex ?? 0,
+  paused: true,
+  duration: 0,
+  current: 0,
+})
+
+const currentAudio = computed(() => props.audios[status.idx])
+
+const percent = computed(() => (status.duration > 0 ? status.current / status.duration : 1))
+
+const progressStyle = computed(() => {
+  return `
+--current: ${~~(percent.value * 100)}%;
+--loaded: ${~~(percent.value * 100)}%;
+  `
 })
 
 const actions = {
   switch(index: number) {
-    if (index === props.currentPlayIndex) return
+    if (index === status.idx) return
 
     if (index < 0 || index >= props.audios.length) return
+
+    status.idx = index
 
     emit('update:currentPlayIndex', index)
   },
   next() {
-    actions.switch(props.currentPlayIndex + 1)
+    actions.switch(status.idx + 1)
   },
   previous() {
-    actions.switch(props.currentPlayIndex - 1)
+    actions.switch(status.idx - 1)
   },
 
   seek(time: number) {
@@ -37,14 +55,14 @@ const actions = {
       return
     }
 
-    if (audio.value.readyState <= 2) {
-      return
-    }
+    status.current = time
 
     audio.value.currentTime = time
   },
   async play() {
     if (!audio.value) return
+
+    status.paused = false
 
     try {
       await audio.value.play()
@@ -57,7 +75,16 @@ const actions = {
 
     if (audio.value.paused) return
 
+    status.paused = true
+
     audio.value.pause()
+  },
+  async toggle() {
+    if (status.paused) {
+      await actions.play()
+    } else {
+      actions.pause()
+    }
   },
   volume(val: number) {
     if (!audio.value) return
@@ -71,27 +98,57 @@ const actions = {
   },
 }
 
+function initAudio() {
+  if (!audio.value) return
+  status.duration = audio.value.duration
+  status.current = 0
+}
+
+function updateCurrent() {
+  if (!audio.value) return
+  status.current = audio.value.currentTime
+}
+
+watch(
+  () => props.currentPlayIndex,
+  () => {
+    const idx = props.currentPlayIndex ?? 0
+    actions.switch(idx)
+  }
+)
+
 defineExpose(actions)
 </script>
 
 <template>
-  <div class="v-audio">
-    <audio ref="audio" style="display: none">
+  <div class="v-audio" :class="{ playing: !status.paused }">
+    <audio ref="audio" style="display: none" @loadeddata="initAudio" @timeupdate="updateCurrent">
       <source :src="currentAudio.url" />
     </audio>
     <div class="v-audio-cover">
-      <img :src="currentAudio.url" />
+      <img :src="currentAudio.cover" />
     </div>
-    <div class="v-audio-info">
-      <p class="v-audio-title"></p>
-      <div class="v-audio-progress">
+    <div class="v-audio-box">
+      <div class="v-audio-info">
+        <p class="v-audio-title">{{ currentAudio.name }}</p>
+      </div>
+
+      <div class="v-audio-progress" :style="progressStyle">
         <div class="v-audio-progress__current"></div>
         <div class="v-audio-progress__loaded"></div>
       </div>
+
       <div class="v-audio-controls">
-        <div class="v-audio-previous"></div>
-        <div class="v-audio-play"></div>
-        <div class="v-audio-next"></div>
+        <span class="v-audio-btn v-audio-previous" @click="actions.previous">
+          <icon-skip-previous />
+        </span>
+        <span class="v-audio-btn v-audio-play" @click="actions.toggle">
+          <icon-play v-if="status.paused" />
+          <icon-pause v-else />
+        </span>
+        <span class="v-audio-btn v-audio-next">
+          <icon-skip-next />
+        </span>
       </div>
     </div>
   </div>
@@ -99,15 +156,107 @@ defineExpose(actions)
 
 <style lang="less">
 .v-audio {
+  --height: 60px;
+  --width: 500px;
+
+  --size: calc(var(--height) + 10px);
+
+  box-sizing: border-box;
+
   position: relative;
+  font-size: 16px;
+
+  height: var(--height);
+  width: var(--width);
+  text-align: left;
+
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
 
   &-cover {
     position: absolute;
-    top: 0;
     left: 0;
+    width: var(--size);
+    height: var(--size);
+    overflow: hidden;
+    border-radius: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 20px rgb(233, 233, 233);
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      -webkit-user-drag: none;
+    }
+  }
+
+  &-box {
+    margin-left: calc(var(--size) / 2);
+    padding-left: calc(var(--size) / 2 + 10px);
+    padding-right: 10px;
+    box-shadow: 0 0 1px #888;
+
+    display: flex;
+    flex-direction: column;
+    height: 100%;
   }
 
   &-info {
+  }
+
+  &-progress {
+    --current: 10%;
+    --loaded: 20%;
+    --color: 229;
+
+    position: relative;
+    height: 3px;
+    width: 100%;
+    background: #dfdfdf;
+    border-radius: 10px;
+    overflow: hidden;
+
+    &__loaded {
+      position: absolute;
+      transition: width linear 0.4s;
+      z-index: 1;
+      height: 100%;
+      width: var(--loaded);
+      background: hsl(var(--color), 67%, 80%);
+    }
+
+    &__current {
+      position: absolute;
+      transition: width linear 0.4s;
+      z-index: 2;
+      width: var(--current);
+      height: 100%;
+      background: hsl(var(--color), 67%, 50%);
+    }
+  }
+
+  &-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px 0;
+  }
+
+  &-btn {
+    cursor: pointer;
+    color: rgb(172, 172, 172);
+    transition: colors 0.4s ease;
+    display: inline-flex;
+
+    &:hover {
+      color: rgb(95, 95, 95);
+    }
   }
 }
 </style>
