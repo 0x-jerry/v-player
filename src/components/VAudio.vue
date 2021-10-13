@@ -125,6 +125,12 @@ function updateProgress() {
   }
 }
 
+function seekProgress(e: MouseEvent) {
+  const percent = e.offsetX / (e.target as HTMLDivElement).clientWidth
+
+  actions.seek(percent * status.duration)
+}
+
 watch(
   () => props.currentPlayIndex,
   () => {
@@ -154,7 +160,7 @@ defineExpose(actions)
         <p class="v-audio-title">{{ currentAudio.name }}</p>
       </div>
 
-      <div class="v-audio-progress">
+      <div class="v-audio-progress" @click="seekProgress">
         <div
           class="v-audio-progress__current"
           :style="{
@@ -248,6 +254,7 @@ defineExpose(actions)
     --color: 229;
 
     position: relative;
+    cursor: pointer;
     height: 3px;
     width: 100%;
     background: #dfdfdf;
@@ -256,6 +263,7 @@ defineExpose(actions)
 
     &__loaded {
       position: absolute;
+      pointer-events: none;
       // transition: width linear 0.2s;
       z-index: 1;
       height: 100%;
@@ -264,6 +272,7 @@ defineExpose(actions)
 
     &__current {
       position: absolute;
+      pointer-events: none;
       // transition: width linear 0.2s;
       z-index: 2;
       height: 100%;
