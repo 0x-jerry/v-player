@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { AudioOption } from './types'
-import IconPlay from '~icons/mdi/play-circle-outline'
-import IconPause from '~icons/mdi/pause-circle-outline'
-import IconSkipNext from '~icons/mdi/skip-next-outline'
-import IconSkipPrevious from '~icons/mdi/skip-previous-outline'
+import IconPlay from '~icons/mdi/play'
+import IconPause from '~icons/mdi/pause'
+import IconSkipNext from '~icons/mdi/skip-next'
+import IconSkipPrevious from '~icons/mdi/skip-previous'
+import VProgress from './VProgress.vue'
 
 const props = defineProps<{
   audios: AudioOption[]
@@ -49,9 +50,8 @@ const actions = {
       return
     }
 
-    status.current = time
-
     audio.value.currentTime = time
+    status.current = time
   },
   async play() {
     if (!audio.value) return
@@ -106,6 +106,7 @@ function initAudio() {
 
 function updateCurrent() {
   if (!audio.value) return
+
   status.current = audio.value.currentTime
 }
 
@@ -125,12 +126,6 @@ function updateProgress() {
       end: end / duration,
     })
   }
-}
-
-function seekProgress(e: MouseEvent) {
-  const percent = e.offsetX / (e.target as HTMLDivElement).clientWidth
-
-  actions.seek(percent * status.duration)
 }
 
 watch(
@@ -163,23 +158,13 @@ defineExpose(actions)
         <p class="v-audio-title">{{ currentAudio.name }}</p>
       </div>
 
-      <div class="v-audio-progress" @click="seekProgress">
-        <div class="v-audio__background"></div>
-        <div
-          class="v-audio-progress__current"
-          :style="{
-            width: `${percent * 100}%`,
-          }"
-        ></div>
-        <div
-          class="v-audio-progress__loaded"
-          v-for="o in status.loadedRanges"
-          :style="{
-            left: `${o.start * 100}%`,
-            width: `${(o.end - o.start) * 100}%`,
-          }"
-        ></div>
-      </div>
+      <v-progress
+        class="v-audio-progress"
+        theme="#d679a2"
+        :current="percent"
+        :ranges="status.loadedRanges"
+        @update:current="(p) => actions.seek(p * status.duration)"
+      ></v-progress>
 
       <div class="v-audio-controls">
         <span class="v-audio-btn v-audio-previous" @click="actions.previous">
@@ -199,11 +184,14 @@ defineExpose(actions)
 
 <style lang="less">
 .v-audio {
-  --height: 60px;
+  --height: 80px;
   --width: 500px;
   --theme: #d679a2;
 
-  --size: calc(var(--height) + 10px);
+  --cover-pad-size: 30px;
+  --size: calc(var(--height) + var(--cover-pad-size) * 2);
+
+  margin: var(--cover-pad-size);
 
   box-sizing: border-box;
 
@@ -241,9 +229,10 @@ defineExpose(actions)
   }
 
   &-box {
-    margin-left: calc(var(--size) / 2);
+    padding: 2px 10px;
     padding-left: calc(var(--size) / 2 + 10px);
-    padding-right: 10px;
+    margin-left: calc(var(--size) / 2);
+
     box-shadow: 0 0 10px #f1f1f1;
     border-radius: 5px;
 
@@ -253,48 +242,17 @@ defineExpose(actions)
   }
 
   &-info {
+    flex: 1;
   }
 
   &-progress {
-    position: relative;
-    cursor: pointer;
-    height: 3px;
-    width: 100%;
-    border-radius: 10px;
-    overflow: hidden;
-
-    &__background {
-      width: 100%;
-      height: 100%;
-      background: var(--theme);
-      opacity: 10%;
-    }
-
-    &__loaded {
-      position: absolute;
-      pointer-events: none;
-      // transition: width linear 0.2s;
-      z-index: 1;
-      height: 100%;
-      background: var(--theme);
-      opacity: 40%;
-    }
-
-    &__current {
-      position: absolute;
-      pointer-events: none;
-      // transition: width linear 0.2s;
-      z-index: 2;
-      height: 100%;
-      background: var(--theme);
-    }
+    margin: 5px 0;
   }
 
   &-controls {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 2px 0;
   }
 
   &-btn {
@@ -309,7 +267,7 @@ defineExpose(actions)
   }
 
   &-play {
-    font-size: x-large;
+    font-size: large;
   }
 }
 </style>
