@@ -20,18 +20,12 @@ const status = reactive({
   paused: true,
   duration: 0,
   current: 0,
+  loadedRanges: [] as { start: number; end: number }[],
 })
 
 const currentAudio = computed(() => props.audios[status.idx])
 
 const percent = computed(() => (status.duration > 0 ? status.current / status.duration : 1))
-
-const progressStyle = computed(() => {
-  return `
---current: ${~~(percent.value * 100)}%;
---loaded: ${~~(percent.value * 100)}%;
-  `
-})
 
 const actions = {
   switch(index: number) {
@@ -113,6 +107,24 @@ function updateCurrent() {
   status.current = audio.value.currentTime
 }
 
+function updateProgress() {
+  if (!audio.value) return
+
+  status.loadedRanges = []
+
+  const duration = audio.value.duration
+
+  for (let idx = 0; idx < audio.value.seekable.length; idx++) {
+    const start = audio.value.seekable.start(idx)
+    const end = audio.value.seekable.end(idx)
+
+    status.loadedRanges.push({
+      start: start / duration,
+      end: end / duration,
+    })
+  }
+}
+
 watch(
   () => props.currentPlayIndex,
   () => {
@@ -132,6 +144,7 @@ defineExpose(actions)
       style="display: none"
       @loadeddata="initAudio"
       @timeupdate="updateCurrent"
+      @progress="updateProgress"
     ></audio>
     <div class="v-audio-cover">
       <img :src="currentAudio.cover" />
@@ -141,9 +154,21 @@ defineExpose(actions)
         <p class="v-audio-title">{{ currentAudio.name }}</p>
       </div>
 
-      <div class="v-audio-progress" :style="progressStyle">
-        <div class="v-audio-progress__current"></div>
-        <div class="v-audio-progress__loaded"></div>
+      <div class="v-audio-progress">
+        <div
+          class="v-audio-progress__current"
+          :style="{
+            width: `${percent * 100}%`,
+          }"
+        ></div>
+        <div
+          class="v-audio-progress__loaded"
+          v-for="o in status.loadedRanges"
+          :style="{
+            left: `${o.start * 100}%`,
+            width: `${(o.end - o.start) * 100}%`,
+          }"
+        ></div>
       </div>
 
       <div class="v-audio-controls">
@@ -220,8 +245,6 @@ defineExpose(actions)
   }
 
   &-progress {
-    --current: 10%;
-    --loaded: 20%;
     --color: 229;
 
     position: relative;
@@ -236,7 +259,6 @@ defineExpose(actions)
       // transition: width linear 0.2s;
       z-index: 1;
       height: 100%;
-      width: var(--loaded);
       background: hsl(var(--color), 67%, 80%);
     }
 
@@ -244,7 +266,6 @@ defineExpose(actions)
       position: absolute;
       // transition: width linear 0.2s;
       z-index: 2;
-      width: var(--current);
       height: 100%;
       background: hsl(var(--color), 67%, 50%);
     }
@@ -266,6 +287,10 @@ defineExpose(actions)
     &:hover {
       color: rgb(95, 95, 95);
     }
+  }
+
+  &-play {
+    font-size: x-large;
   }
 }
 </style>
