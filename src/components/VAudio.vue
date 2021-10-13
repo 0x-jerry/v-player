@@ -153,6 +153,7 @@ defineExpose(actions)
       @loadeddata="initAudio"
       @timeupdate="updateCurrent"
       @progress="updateProgress"
+      @ended="status.paused = true"
     ></audio>
     <div class="v-audio-cover">
       <img :src="currentAudio.cover" />
@@ -163,6 +164,7 @@ defineExpose(actions)
       </div>
 
       <div class="v-audio-progress" @click="seekProgress">
+        <div class="v-audio__background"></div>
         <div
           class="v-audio-progress__current"
           :style="{
@@ -199,6 +201,7 @@ defineExpose(actions)
 .v-audio {
   --height: 60px;
   --width: 500px;
+  --theme: #d679a2;
 
   --size: calc(var(--height) + 10px);
 
@@ -253,15 +256,19 @@ defineExpose(actions)
   }
 
   &-progress {
-    --color: 229;
-
     position: relative;
     cursor: pointer;
     height: 3px;
     width: 100%;
-    background: #dfdfdf;
     border-radius: 10px;
     overflow: hidden;
+
+    &__background {
+      width: 100%;
+      height: 100%;
+      background: var(--theme);
+      opacity: 10%;
+    }
 
     &__loaded {
       position: absolute;
@@ -269,7 +276,8 @@ defineExpose(actions)
       // transition: width linear 0.2s;
       z-index: 1;
       height: 100%;
-      background: hsl(var(--color), 67%, 80%);
+      background: var(--theme);
+      opacity: 40%;
     }
 
     &__current {
@@ -278,7 +286,7 @@ defineExpose(actions)
       // transition: width linear 0.2s;
       z-index: 2;
       height: 100%;
-      background: hsl(var(--color), 67%, 50%);
+      background: var(--theme);
     }
   }
 
