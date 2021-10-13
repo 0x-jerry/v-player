@@ -25,7 +25,7 @@ const status = reactive({
 
 const currentAudio = computed(() => props.audios[status.idx])
 
-const percent = computed(() => (status.duration > 0 ? status.current / status.duration : 1))
+const percent = computed(() => (status.duration > 0 ? status.current / status.duration : 0))
 
 const actions = {
   switch(index: number) {
@@ -100,6 +100,8 @@ function initAudio() {
   if (!status.paused) {
     actions.play()
   }
+
+  updateProgress()
 }
 
 function updateCurrent() {
