@@ -1,11 +1,8 @@
 <script lang="ts" setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { AudioOption } from './types'
-import IconPlay from '~icons/mdi/play'
-import IconPause from '~icons/mdi/pause'
-import IconSkipNext from '~icons/mdi/skip-next'
-import IconSkipPrevious from '~icons/mdi/skip-previous'
 import VProgress from './VProgress.vue'
+import VControls from './VControls.vue'
 
 const props = defineProps<{
   audios: AudioOption[]
@@ -150,9 +147,11 @@ defineExpose(actions)
       @progress="updateProgress"
       @ended="status.paused = true"
     ></audio>
+
     <div class="v-audio-cover">
       <img :src="currentAudio.cover" />
     </div>
+
     <div class="v-audio-box">
       <div class="v-audio-info">
         <p class="v-audio-title">{{ currentAudio.name }}</p>
@@ -164,20 +163,15 @@ defineExpose(actions)
         :current="percent"
         :ranges="status.loadedRanges"
         @update:current="(p) => actions.seek(p * status.duration)"
-      ></v-progress>
+      />
 
-      <div class="v-audio-controls">
-        <span class="v-audio-btn v-audio-previous" @click="actions.previous">
-          <icon-skip-previous />
-        </span>
-        <span class="v-audio-btn v-audio-play" @click="actions.toggle">
-          <icon-play v-if="status.paused" />
-          <icon-pause v-else />
-        </span>
-        <span class="v-audio-btn v-audio-next" @click="actions.next">
-          <icon-skip-next />
-        </span>
-      </div>
+      <v-controls
+        class="v-audio-controls"
+        :paused="status.paused"
+        @play="actions.toggle"
+        @previous="actions.previous"
+        @next="actions.next"
+      />
     </div>
   </div>
 </template>
@@ -186,7 +180,6 @@ defineExpose(actions)
 .v-audio {
   --height: 80px;
   --width: 500px;
-  --theme: #d679a2;
 
   --cover-pad-size: 30px;
   --size: calc(var(--height) + var(--cover-pad-size) * 2);
@@ -197,6 +190,7 @@ defineExpose(actions)
 
   position: relative;
   font-size: 16px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
   height: var(--height);
   width: var(--width);
@@ -253,21 +247,6 @@ defineExpose(actions)
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  &-btn {
-    cursor: pointer;
-    color: rgb(172, 172, 172);
-    transition: colors 0.4s ease;
-    display: inline-flex;
-
-    &:hover {
-      color: rgb(95, 95, 95);
-    }
-  }
-
-  &-play {
-    font-size: large;
   }
 }
 </style>
