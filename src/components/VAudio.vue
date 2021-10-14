@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import { computed, reactive, ref, watch } from 'vue'
+import IconSkipNext from '~icons/mdi/skip-next'
+import IconSkipPrevious from '~icons/mdi/skip-previous'
 import { AudioOption } from './types'
 import VProgress from './VProgress.vue'
-import VControls from './VControls.vue'
 import VCover from './VCover.vue'
+import VPlayIcon from './VPlayIcon.vue'
 
 const props = defineProps<{
   audios: AudioOption[]
@@ -155,45 +157,39 @@ defineExpose(actions)
       @ended="onEnded"
     ></audio>
 
-    <v-cover
-      class="v-audio-cover"
-      :src="currentAudio.cover"
-      :paused="status.paused"
-      :reset="status.idx"
-    />
-
-    <div class="v-audio-box">
-      <div class="v-audio-info" flex="~" h="full" align="items-center">
-        <p class="v-audio-title">{{ currentAudio.name }}</p>
+    <div class="v-audio-cover">
+      <v-cover :src="currentAudio.cover" :paused="status.paused" :reset="status.idx" />
+      <div class="v-audio-play-icon">
+        <v-play-icon @click="actions.toggle" :paused="status.paused" style="font-size: 3em" />
       </div>
+    </div>
 
-      <div flex="~" align="items-center">
-        <v-progress
-          class="v-audio-progress"
-          theme="#d679a2"
-          :current="percent"
-          :ranges="status.loadedRanges"
-          @update:current="(p) => actions.seek(p * status.duration)"
-        />
+    <div class="v-audio-box" flex="~ row" align="items-center">
+      <!-- <p class="v-audio-title">{{ currentAudio.name }}</p> -->
 
-        <v-controls
-          class="v-audio-controls"
-          :paused="status.paused"
-          @play="actions.toggle"
-          @previous="actions.previous"
-          @next="actions.next"
-        />
-      </div>
+      <span class="v-controls-btn v-controls-previous" @click="actions.previous">
+        <icon-skip-previous />
+      </span>
+      <span class="v-controls-btn v-controls-next" @click="actions.next">
+        <icon-skip-next />
+      </span>
+
+      <v-progress
+        class="v-audio-progress"
+        theme="#d679a2"
+        :current="percent"
+        :ranges="status.loadedRanges"
+        @update:current="(p) => actions.seek(p * status.duration)"
+      />
     </div>
   </div>
 </template>
 
 <style lang="less">
 .v-audio {
-  --height: 80px;
-  --width: 500px;
+  --height: 30px;
 
-  --cover-pad-size: 30px;
+  --cover-pad-size: 10px;
   --size: calc(var(--height) + var(--cover-pad-size) * 2);
 
   margin: var(--cover-pad-size);
@@ -205,7 +201,6 @@ defineExpose(actions)
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
   height: var(--height);
-  width: var(--width);
   text-align: left;
 
   * {
@@ -222,7 +217,21 @@ defineExpose(actions)
     height: var(--size);
     top: 50%;
     transform: translateY(-50%);
-    box-shadow: 0 0 20px rgb(233, 233, 233);
+    box-shadow: 0 0 10px rgb(233, 233, 233);
+    border-radius: 100%;
+    overflow: hidden;
+  }
+
+  &-play-icon {
+    @apply absolute top-0 left-0 w-full h-full;
+    @apply flex justify-center items-center;
+    background: rgba(163, 163, 163, 0.342);
+    opacity: 0;
+    transition: opacity ease 0.4s;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 
   &-box {
@@ -238,8 +247,9 @@ defineExpose(actions)
     height: 100%;
   }
 
-  &-info {
-    flex: 1;
+  &-title {
+    word-break: keep-all;
+    white-space: pre;
   }
 
   &-progress {
@@ -250,6 +260,27 @@ defineExpose(actions)
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+}
+
+.v-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &-btn {
+    cursor: pointer;
+    color: rgb(172, 172, 172);
+    transition: colors 0.4s ease;
+    display: inline-flex;
+
+    &:hover {
+      color: rgb(95, 95, 95);
+    }
+  }
+
+  &-play {
+    font-size: large;
   }
 }
 </style>
