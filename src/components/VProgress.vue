@@ -99,7 +99,6 @@ const startDrag = useDrag({
   height: 3px;
   width: 100%;
   border-radius: 10px;
-  padding: 5px 0;
 
   -webkit-user-drag: none;
 
@@ -110,12 +109,14 @@ const startDrag = useDrag({
   &__background {
     width: 100%;
     height: 100%;
+    border-radius: 10px;
     background: v-bind('primaryColor');
     opacity: 10%;
   }
 
   &__loaded {
     position: absolute;
+    border-radius: 10px;
     top: 0;
     pointer-events: none;
     height: 100%;
@@ -127,6 +128,7 @@ const startDrag = useDrag({
 
   &__current {
     position: absolute;
+    border-radius: 10px;
     top: 0;
     pointer-events: none;
     height: 100%;

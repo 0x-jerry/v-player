@@ -2,6 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import IconSkipNext from '~icons/mdi/skip-next'
 import IconSkipPrevious from '~icons/mdi/skip-previous'
+import IconMenu from '~icons/mdi/menu'
 import { AudioOption } from './types'
 import VProgress from './VProgress.vue'
 import VCover from './VCover.vue'
@@ -22,6 +23,7 @@ const status = reactive({
   duration: 0,
   current: 0,
   loadedRanges: [] as { start: number; end: number }[],
+  theme: '#d679a2',
 })
 
 const currentAudio = computed(() => props.audios[status.idx])
@@ -160,27 +162,30 @@ defineExpose(actions)
     <div class="v-audio-cover">
       <v-cover :src="currentAudio.cover" :paused="status.paused" :reset="status.idx" />
       <div class="v-audio-play-icon">
-        <v-play-icon @click="actions.toggle" :paused="status.paused" style="font-size: 3em" />
+        <v-play-icon @click="actions.toggle" :paused="status.paused" style="font-size: 1.5em" />
       </div>
     </div>
 
     <div class="v-audio-box" flex="~ row" align="items-center">
-      <!-- <p class="v-audio-title">{{ currentAudio.name }}</p> -->
-
       <span class="v-controls-btn v-controls-previous" @click="actions.previous">
         <icon-skip-previous />
       </span>
+
       <span class="v-controls-btn v-controls-next" @click="actions.next">
         <icon-skip-next />
       </span>
 
       <v-progress
         class="v-audio-progress"
-        theme="#d679a2"
+        :theme="status.theme"
         :current="percent"
         :ranges="status.loadedRanges"
         @update:current="(p) => actions.seek(p * status.duration)"
       />
+
+      <span class="v-controls-btn" v-if="audios.length > 1">
+        <icon-menu />
+      </span>
     </div>
   </div>
 </template>
@@ -217,7 +222,7 @@ defineExpose(actions)
     height: var(--size);
     top: 50%;
     transform: translateY(-50%);
-    box-shadow: 0 0 10px rgb(233, 233, 233);
+    box-shadow: 0 0 10px rgba(237, 237, 237, 0.761);
     border-radius: 100%;
     overflow: hidden;
   }
@@ -225,7 +230,7 @@ defineExpose(actions)
   &-play-icon {
     @apply absolute top-0 left-0 w-full h-full;
     @apply flex justify-center items-center;
-    background: rgba(163, 163, 163, 0.342);
+    background: rgba(207, 207, 207, 0.774);
     opacity: 0;
     transition: opacity ease 0.4s;
 
@@ -235,11 +240,11 @@ defineExpose(actions)
   }
 
   &-box {
-    padding: 2px 10px;
-    padding-left: calc(var(--size) / 2 + 10px);
+    padding-left: calc(var(--size) / 2);
+    padding-right: 3px;
     margin-left: calc(var(--size) / 2);
 
-    box-shadow: 0 0 10px #f1f1f1;
+    border: 1px solid #ebebeb;
     border-radius: 5px;
 
     display: flex;
@@ -253,7 +258,7 @@ defineExpose(actions)
   }
 
   &-progress {
-    margin-right: 15px;
+    margin: 0 10px;
   }
 
   &-controls {
