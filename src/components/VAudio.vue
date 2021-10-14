@@ -7,13 +7,16 @@ import { AudioOption } from './types'
 import VProgress from './VProgress.vue'
 import VCover from './VCover.vue'
 import VPlayIcon from './VPlayIcon.vue'
+import VVolume from './VVolume.vue'
 
 const props = defineProps<{
   audios: AudioOption[]
   currentPlayIndex?: number
 }>()
 
-const emit = defineEmits(['update:currentPlayIndex'])
+const emit = defineEmits<{
+  (event: 'update:currentPlayIndex', val: number): void
+}>()
 
 const audio = ref<HTMLAudioElement>()
 
@@ -24,6 +27,7 @@ const status = reactive({
   current: 0,
   loadedRanges: [] as { start: number; end: number }[],
   theme: '#d679a2',
+  volume: 1,
 })
 
 const currentAudio = computed(() => props.audios[status.idx])
@@ -100,6 +104,7 @@ function initAudio() {
   if (!audio.value) return
   status.duration = audio.value.duration
   status.current = 0
+  status.volume = audio.value.volume
 
   if (!status.paused) {
     actions.play()
@@ -178,10 +183,14 @@ defineExpose(actions)
       <v-progress
         class="v-audio-progress"
         :theme="status.theme"
-        :current="percent"
+        :value="percent"
         :ranges="status.loadedRanges"
-        @update:current="(p) => actions.seek(p * status.duration)"
+        @update:value="(p) => actions.seek(p * status.duration)"
       />
+
+      <span class="v-controls-btn">
+        <v-volume :value="status.volume" @update:value="(v) => actions.volume(v)" />
+      </span>
 
       <span class="v-controls-btn" v-if="audios.length > 1">
         <icon-menu />
@@ -211,8 +220,6 @@ defineExpose(actions)
   * {
     box-sizing: border-box;
     -webkit-user-drag: none;
-    padding: 0;
-    margin: 0;
   }
 
   &-cover {

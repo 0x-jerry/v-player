@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, reactive, watch } from 'vue'
+import { computed, reactive, watch, watchEffect } from 'vue'
 import { useDrag } from './utils'
 
 interface LoadedRange {
@@ -17,28 +17,40 @@ const props = defineProps<{
   /**
    * 0 - 1
    */
-  current: number
+  value: number
   ranges?: LoadedRange[]
   theme?: string
+  vertical?: boolean
+  /**
+   * only change value when mouseup triggered
+   */
+  changeOnUp?: boolean
 }>()
 
-const emit = defineEmits(['update:current'])
+const emit = defineEmits<{
+  (event: 'update:value', val: number): void
+  (event: 'activeChanged', val: boolean): void
+}>()
 
 const primaryColor = computed(() => props.theme ?? 'black')
 
 const data = reactive({
-  current: props.current,
+  current: props.value,
   active: false,
 })
 
+watchEffect(() => {
+  emit('activeChanged', data.active)
+})
+
 watch(
-  () => props.current,
+  () => props.value,
   () => {
     if (data.active) {
       return
     }
 
-    data.current = props.current
+    data.current = props.value
   }
 )
 
@@ -47,15 +59,21 @@ const startDrag = useDrag({
     data.active = true
     data.current = e.offsetX / target.clientWidth
   },
-  update(dx, _, target) {
-    const current = data.current + dx / target.clientWidth
+  update(dx, dy, target) {
+    const dd = props.vertical ? -dy : dx
+
+    const current = data.current + dd / target.clientWidth
 
     data.current = current < 0 ? 0 : current > 1 ? 1 : current
+
+    if (!props.changeOnUp) {
+      emit('update:value', data.current)
+    }
   },
   end() {
     data.active = false
 
-    emit('update:current', data.current)
+    emit('update:value', data.current)
   },
 })
 </script>
