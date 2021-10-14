@@ -185,6 +185,7 @@ defineExpose(actions)
         :theme="status.theme"
         :value="percent"
         :ranges="status.loadedRanges"
+        :change-on-up="true"
         @update:value="(p) => actions.seek(p * status.duration)"
       />
 

@@ -71,7 +71,7 @@ function switchMute() {
       <div class="v-volume-progress__inner">
         <v-progress
           v-model:value="data.value"
-          vertical
+          :vertical="true"
           @active-changed="(v: boolean) => (data.isChangingVolume = v)"
         />
       </div>
